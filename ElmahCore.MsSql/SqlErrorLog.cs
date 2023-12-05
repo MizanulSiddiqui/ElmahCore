@@ -146,7 +146,7 @@ namespace ElmahCore.Sql
             {
                 connection.Open();
 
-                using (var command = Commands.GetErrorsXml(ApplicationName, errorIndex, pageSize,
+                using (var command = Commands.GetErrorsXml(ApplicationName, searchText, errorIndex, pageSize,
                 DatabaseSchemaName, DatabaseTableName))
                 {
                     command.Connection = connection;
@@ -330,18 +330,20 @@ WHERE
             }
 
             public static SqlCommand GetErrorsXml(
-                string appName, 
+                string appName,
+                string search,
                 int errorIndex, 
                 int pageSize,
                 string schemaName,
                 string tableName)
             {
+                search =  "%" + search + "%";
                 var command = new SqlCommand
                 {
                     CommandText = $@"
 SELECT ErrorId, AllXml FROM [{schemaName}].[{tableName}]
 WHERE
-    Application = @Application
+    Application = @Application  AND (StatusCode like @search or AllXml like @search OR Message like @search )
 ORDER BY [Sequence] DESC
 OFFSET     @offset ROWS
 FETCH NEXT @limit ROWS ONLY;
@@ -352,6 +354,7 @@ FETCH NEXT @limit ROWS ONLY;
                 command.Parameters.Add("@Application", SqlDbType.NVarChar, MaxAppNameLength).Value = appName;
                 command.Parameters.Add("@offset", SqlDbType.Int).Value = errorIndex;
                 command.Parameters.Add("@limit", SqlDbType.Int).Value = pageSize;
+                command.Parameters.Add("@search", SqlDbType.NVarChar, MaxAppNameLength).Value = search;
 
                 return command;
             }

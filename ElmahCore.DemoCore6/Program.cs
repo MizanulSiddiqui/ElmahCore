@@ -1,15 +1,25 @@
 using ElmahCore;
 using ElmahCore.DemoCore6;
 using ElmahCore.Mvc;
+using ElmahCore.Sql;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddElmah<XmlFileErrorLog>(options =>
+//builder.Services.AddElmah<SQ>(options =>
+//{
+//    options.LogPath = "~/log";
+//    options.Notifiers.Add(new MyNotifier());
+//    options.Filters.Add(new CmsErrorLogFilter());
+//});
+builder.Services.AddElmah<SqlErrorLog>(options =>
 {
-    options.LogPath = "~/log";
-    options.Notifiers.Add(new MyNotifier());
+    options.ConnectionString = builder.Configuration.GetConnectionString("ElmahConnection");
+    options.SqlServerDatabaseSchemaName = "dbo"; //Defaults to dbo if not set
+    options.SqlServerDatabaseTableName = "ELMAH_Error"; //Defaults to ELMAH_Error if not set
+    //options.OknPermissionCheck = context => context.User.Identity.IsAuthenticated;
+    options.Path = "/elmah";
     options.Filters.Add(new CmsErrorLogFilter());
 });
 
